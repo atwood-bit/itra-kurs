@@ -1,0 +1,5 @@
+{
+    "port": 5000,
+    "jwtSecret": "collectionsite",
+    "mongoUri": "mongodb+srv://AdminDB:Adm12345@cluster0-jgdxp.azure.mongodb.net/test?retryWrites=true&w=majority"
+}

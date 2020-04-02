@@ -1,0 +1,37 @@
+{
+  "name": "itra",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "cross-env node app.js",
+    "heroku-postbuild": "cd client && npm install && npm run build",
+    "server": "nodemon app.js",
+    "client": "npm run start --prefix client",
+    "client:install": "npm install --prefix client",
+    "client:build": "npm run build --prefix client",
+    "dev": "cross-env concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "Artyom Zinko <artemzinko@mail.ru>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "bcryptjs": "^2.4.3",
+    "config": "^3.3.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.4.0",
+    "firebase": "^7.13.1",
+    "firebase-admin": "^8.10.0",
+    "firebase-functions": "^3.5.0",
+    "google-auth-library": "^5.10.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.3",
+    "react-search-field": "^1.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^5.1.0",
+    "cross-env": "^7.0.2",
+    "nodemon": "^2.0.2"
+  }
+}

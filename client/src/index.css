@@ -1,0 +1,130 @@
+@import "~materialize-css/dist/css/materialize.min.css";
+@import "https://fonts.googleapis.com/icon?family=Material+Icons";
+
+input.yellow-input {
+    border-bottom: 1px solid #fff!important;
+    box-shadow: 0 1px 0 0 #fff!important;
+}
+
+input.yellow-input + label {
+    color: #fff!important;
+}
+
+input.yellow-input:focus {
+    border-bottom: 1px solid #ffeb3b!important;
+    box-shadow: 0 1px 0 0 #ffeb3b!important;
+}
+
+input.yellow-input + label:focus {
+    color: #ffeb3b!important;
+}
+
+div.search-wrapper {
+  position: absolute;
+  width: 40%;
+  left: 20%;
+}
+
+div.users {
+  margin: 10px 0 0 10px;
+}
+
+div.back {
+  height: 100%;
+  width: 100%;
+  height: 100vh;
+  width: 100vw;
+  /* background-image: url("./images/look.com.ua-28428.jpg"); */
+  background-repeat: no-repeat;
+  background-size: 100%; 
+}
+
+span.waves-effect {
+    margin: 10px 0 0 10px;
+}
+
+a.waves-effect {
+    margin: 0 10px 0 0;
+}
+
+
+div.CardColor {
+    margin: 0 10px 0 0;
+}
+
+[id='toggle-heart'] {
+    position: absolute;
+    left: -100vw;
+  }
+  [id='toggle-heart']:checked + label {
+    color: #e2264d;
+    -webkit-filter: none;
+            filter: none;
+    will-change: font-size;
+    -webkit-animation: heart 1s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+            animation: heart 1s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  }
+  [id='toggle-heart']:checked + label:before, [id='toggle-heart']:checked + label:after {
+    -webkit-animation: inherit;
+            animation: inherit;
+    -webkit-animation-timing-function: ease-out;
+            animation-timing-function: ease-out;
+  }
+  [id='toggle-heart']:checked + label:before {
+    will-change: transform, border-width, border-color;
+  }
+  [id='toggle-heart']:checked + label:after {
+    will-change: opacity, box-shadow;
+  }
+  [id='toggle-heart']:focus + label {
+    text-shadow: 0 0 3px white,  0 1px 1px white, 0 -1px 1px white,  1px 0 1px white, -1px 0 1px white;
+  }
+  
+  [htmlFor='toggle-heart'] {
+    align-self: center;
+    position: relative;
+    color: #888;
+    font-size: 2em;
+    -webkit-filter: grayscale(1);
+            filter: grayscale(1);
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    cursor: pointer;
+  }
+  [htmlFor='toggle-heart']:before, [htmlFor='toggle-heart']:after {
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    content: '';
+  }
+  [htmlFor='toggle-heart']:before {
+    box-sizing: border-box;
+    margin: -2.25rem;
+    border: solid 2.25rem #e2264d;
+    width: 4.5rem;
+    height: 4.5rem;
+    -webkit-transform: scale(0);
+            transform: scale(0);
+  }
+  [htmlFor='toggle-heart']:after {
+    margin: -0.1875rem;
+    width: 0.375rem;
+    height: 0.375rem;
+    box-shadow: 0.32476rem -3rem 0 -0.1875rem #ff8080, -0.32476rem -2.625rem 0 -0.1875rem #ffed80, 2.54798rem -1.61656rem 0 -0.1875rem #ffed80, 1.84982rem -1.89057rem 0 -0.1875rem #a4ff80, 2.85252rem 0.98418rem 0 -0.1875rem #a4ff80, 2.63145rem 0.2675rem 0 -0.1875rem #80ffc8, 1.00905rem 2.84381rem 0 -0.1875rem #80ffc8, 1.43154rem 2.22414rem 0 -0.1875rem #80c8ff, -1.59425rem 2.562rem 0 -0.1875rem #80c8ff, -0.84635rem 2.50595rem 0 -0.1875rem #a480ff, -2.99705rem 0.35095rem 0 -0.1875rem #a480ff, -2.48692rem 0.90073rem 0 -0.1875rem #ff80ed, -2.14301rem -2.12438rem 0 -0.1875rem #ff80ed, -2.25479rem -1.38275rem 0 -0.1875rem #ff8080;
+  }
+  
+  @-webkit-keyframes heart {
+    0%, 17.5% {
+      font-size: 0;
+    }
+  }
+  
+  @keyframes heart {
+    0%, 17.5% {
+      font-size: 0;
+    }
+  }
