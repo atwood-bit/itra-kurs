@@ -1,4 +1,5 @@
-import React, {useState, useEffect, useCallback} from 'react'
+import React, {useState, useEffect, useCallback, useContext} from 'react'
+import {Link} from 'react-router-dom'
 import {useHttp} from '../hooks/http.hook'
 import {Loader} from '../components/Loader'
 import {CollectionsList} from '../components/CollectionList'
@@ -47,13 +48,16 @@ export const MainPage = () => {
         <>
         <div className="row">
             <div className="col s5 offset-s1">
+                {/* <h4>{(lang.language === 'en' && "Collections") || (lang.language === 'ru' && "Коллекции")}</h4> */}
                 <h4>Collections</h4>
         {!loading && <CollectionsList collections={collections} />}
+        <Link to="/all_collections">View all collections</Link>
         </div>
         <div className="col s5 offset-s1">
             <h4>Last added items</h4>
         <ItemsList items={items} />
         </div>
+        
         </div>
        </> 
     )

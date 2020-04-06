@@ -9,7 +9,22 @@ router.get('/', async (req,res) => {
         const items = await Items.find({  }).sort({ 'dateAdd': -1 });
         res.json(items);
     } catch(e) {
-        res.status(500).json({ message: 'Что-то пошло не так' });
+        res.status(500).json(e.message);
+    }
+})
+
+router.get('/search/:itemId', async (req,res) => {
+    const itemId = req.params.itemId.split('&');
+    const res_items = [];
+    itemId.pop();
+    try {
+        await Promise.all(itemId.map(async (i) => {
+            const item = await Items.findById(i);
+            res_items.push(item);
+        }))
+        res.json(res_items);
+    } catch(e) {
+        res.status(500).json(e.message);
     }
 })
 
@@ -18,7 +33,7 @@ router.get('/:id', async (req,res) => {
         const items = await Items.find({ ownCol: req.params.id })
         res.json(items);
     } catch(e) {
-        res.status(500).json({ message: 'Что-то пошло не так' });
+        res.status(500).json(e.message);
     }
 })
 
@@ -35,9 +50,9 @@ router.post(
         fields.map(async (f) => {
             await Items.updateOne({ '_id': item._id }, { $push: {'custom_fields': {'name': f.name, 'type': f.type, 'value': f.value}} });
         })
-        res.status(201).json({ message: 'Айтем добавлен!' });
+        res.status(201).json({ message: 'Add' });
         } catch (e) {
-            res.status(500).json({ message: 'Что-то пошло не так!' });
+            res.status(500).json(e.message);
         }
     }
 )
@@ -47,10 +62,10 @@ router.post(
     async (req,res) => {
         try {
         const { idItem, idUser } = req.body;
-        await Items.updateOne({ '_id': idItem }, { $push: {'likes': { 'userId':idUser }} });
+        await Items.updateOne({ '_id': idItem }, { $push: {'likes': idUser } });
         res.status(201).json({ message: 'Liked' });
         } catch (e) {
-            res.status(500).json({ message: 'Что-то пошло не так!' });
+            res.status(500).json(e.message);
         }
     }
 )
@@ -60,10 +75,10 @@ router.post(
     async (req,res) => {
         try {
         const { idItem, idUser } = req.body;
-        await Items.updateOne({ '_id': idItem }, { $pull: {'likes': { 'userId':idUser }} });
-        res.status(201);
+        await Items.updateOne({ '_id': idItem }, { $pull: {'likes': idUser } });
+        res.status(201).json({ message: 'unLiked' });
         } catch (e) {
-            res.status(500).json({ message: 'Что-то пошло не так!' });
+            res.status(500).json(e.message);
         }
     }
 )
@@ -73,7 +88,17 @@ router.get('/findone/:id', async (req,res) => {
         const items = await Items.findOne({ _id: req.params.id });
         res.json(items);
     } catch(e) {
-        res.status(500).json({ message: 'Что-то пошло не так' });
+        res.status(500).json(e.message);
+    }
+})
+
+router.get('/sort/:id/:value', async (req,res) => {
+    try {
+        const value = req.params.value;
+        const items = await Items.find({ ownCol: req.params.id }).sort({ 'name': value })
+        res.json(items);
+    } catch(e) {
+        res.status(500).json(e.message);
     }
 })
 
@@ -81,19 +106,12 @@ router.post(
     '/delete',
     async (req,res) => {
     try {
-        const { delId } = req.body;
-        if (delId.length === 1) {
-            await Items.deleteOne({ _id: delId });
-            res.status(201).json({ message: 'Айтем удален' });
-            }
-            else {
-                await Items.deleteMany({ _id: delId });
-                res.status(201).json({ message: 'Айтемы удалены' });
-            }
-            const count = delId.length();
-            await Collections.updateOne( {_id: colId}, { $inc: {"countItems": -count} } );
+        const { itemId, idCol } = req.body;
+            await Items.deleteOne({ _id: itemId });
+            await Collections.updateOne( {_id: idCol}, { $inc: {"countItems": -1} } );
+            res.status(201).json({ message: 'Deleted' });
     } catch (e) {
-        res.status(500).json({ message: 'Что-то пошло не так!' });
+        res.status(500).json(e.message);
     }
 });
 
@@ -101,11 +119,14 @@ router.post(
     '/update',
     async (req,res) => {
     try {
-        const { itemId, itemName } = req.body;
-            await Items.updateOne({ '_id': itemId }, { $set: {'name': itemName } });
-            res.status(201).json({ message: 'Коллекция удалена' });
+        const { item, fields } = req.body;
+            await Items.updateOne({ '_id': item._id }, { $set: {'name': item.name, 'tags': item.tags } });
+            fields.map(async (f) => {
+                await Items.updateOne({ '_id': item._id }, { $set: {'custom_fields': { 'name': f.name, 'value': f.value }} });
+            })
+            res.status(201).json({message: "Updated"});
     } catch (e) {
-        res.status(500).json({ message: 'Что-то пошло не так!' });
+        res.status(500).json(e.message);
     }
 });
 

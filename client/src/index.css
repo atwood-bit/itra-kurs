@@ -1,6 +1,31 @@
 @import "~materialize-css/dist/css/materialize.min.css";
 @import "https://fonts.googleapis.com/icon?family=Material+Icons";
 
+#col li {
+  display: block;
+  float: left;
+  width: 50%;
+  border: 1px solid #ccc;
+}
+
+.users {
+  margin-top: 10px;
+}
+
+.log {
+  width: 100%;
+  height: 50px;
+  margin-bottom: 20px;
+}
+
+.select-lang {
+  margin-top: 10px;
+}
+
+.image {
+  height: 210px;
+}
+
 input.yellow-input {
     border-bottom: 1px solid #fff!important;
     box-shadow: 0 1px 0 0 #fff!important;
@@ -27,6 +52,18 @@ div.search-wrapper {
 
 div.users {
   margin: 10px 0 0 10px;
+}
+
+.table {
+  border-collapse: collapse;
+  border: 4px double black;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.comments {
+  border-top: 2px solid #cacd58;
+  margin-bottom: 10px;
 }
 
 div.back {

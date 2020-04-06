@@ -1,12 +1,8 @@
-import React, {useContext} from 'react'
+import React from 'react'
 import {Link} from 'react-router-dom'
-import {mdReact} from 'markdown-react-js'
-import {AuthContext} from '../context/auth.context'
-import {useAuth} from '../hooks/auth.hook'
+import MDReactComponent from 'markdown-react-js';
 
 export const CommentsList = ( {comments} ) => {
-    const {isAuthenticated} = useContext(AuthContext);
-
     if (!comments.length)
     return (
         <div>
@@ -17,12 +13,12 @@ export const CommentsList = ( {comments} ) => {
     )
     return (
         <div>
-            <h3>Comments</h3>
+            <h4>Comments</h4>
             { comments.map((comment) => {
                 return (
-                  <div style={{border: "2px solid", borderColor: "#cacd58 #5faf8a #b9cea5 #aab238"}}>
+                  <div className="comments" key={comment._id}>
                       <h6><strong>{ comment.name }</strong></h6>
-                      <p>{ comment.text } </p>
+                      <MDReactComponent text={ comment.text } />
                 </div>
                 )
             }) }

@@ -7,4 +7,5 @@ const schema = new Schema({
     itemId: { type: Types.ObjectId, ref: 'Items' },
 });
 
+schema.index({text: "text"});
 module.exports = model('Comments', schema);

@@ -3,6 +3,7 @@ import {BrowserRouter as Router} from 'react-router-dom'
 import {useAuth} from './hooks/auth.hook'
 import {useRoutes} from './routes'
 import {AuthContext} from './context/auth.context'
+import {LanguageContext} from './context/language.context'
 import { Navbar } from './components/Navbar';
 import { Loader } from './components/Loader';
 import 'materialize-css';
@@ -19,14 +20,12 @@ if (!ready) {
     <AuthContext.Provider value ={{
       token, login, logout, userId, isAuthenticated, userRole
     }}>
-      <div className="back">
       <Router>
        <Navbar />
       <div className="container">
         {routes}
       </div>
       </Router>
-      </div>
     </AuthContext.Provider>
   );
 }

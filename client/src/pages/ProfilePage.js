@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useContext, useCallback} from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import {useHttp} from '../hooks/http.hook'
 import {useMessage} from '../hooks/message.hook'
 import {AuthContext} from '../context/auth.context'
@@ -22,8 +22,6 @@ export const ProfilePage = () => {
     const [state, setState] = useState({
         url: ''
     });
-    let delID;
-
 
     const fetchCollections = useCallback( async () => {
         try {
@@ -55,7 +53,7 @@ export const ProfilePage = () => {
                 Authorization: `Bearer ${token}`
             });
             fetchCollections();
-            message(data.message);
+            message("Collection created");
         } catch (e) {}
     };
 
@@ -67,10 +65,6 @@ export const ProfilePage = () => {
             fetchCollections();
             message("Deleted");
         } catch (e) {}
-    };
-
-    const addField = () => {
-        fields.push({name_field: '', type_field: ''});
     };
 
     const handleImageUpload = (e) => {
@@ -106,7 +100,7 @@ export const ProfilePage = () => {
                 <div className="col s4 offset-m1">
                     <h3 style={{marginTop: '50px'}}>New collection</h3>
                 <label htmlFor="col_topic">Topic</label>
-                <select className="browser-default" value={form.topic} name="topic" onChange={changeHandlerCol}>
+                <select className="browser-default" name="topic" onChange={changeHandlerCol}>
                     <option value="" disabled selected>Choose your topic</option>
                     <option value="Books">Books</option>
                     <option value="Brands">Brands</option>
@@ -120,7 +114,6 @@ export const ProfilePage = () => {
                     type="text"
                     className="validate"
                     name = "name"
-                    value={form.name}
                     onChange={changeHandlerCol}
                     />
                 </div>
@@ -130,11 +123,10 @@ export const ProfilePage = () => {
                     type="text"
                     className="validate"
                     name = "text"
-                    value={form.text}
                     onChange={changeHandlerCol}
                     />
                 </div>    
-                    <div className="file-field input-field">
+                <div className="file-field input-field">
                     <div className="btn">
                         <span>File</span>
                         <input type="file" multiple
@@ -143,7 +135,7 @@ export const ProfilePage = () => {
                     <div className="file-path-wrapper">
                         <input className="file-path validate" type="text" placeholder="Drag 'n' drop image or click here" />
                     </div>
-                    </div>
+                </div>
                     
                 { !loading &&
                 <div>
@@ -154,7 +146,6 @@ export const ProfilePage = () => {
                                 <label>Type</label>
                                 <select className="browser-default"
                                         name="type_field"
-                                        value={fields.type_field}
                                         onChange= { e => {
                                             fields[ind].type_field = e.target.value;
                                         } }
@@ -179,7 +170,6 @@ export const ProfilePage = () => {
                                             type="text"
                                             className="validate"
                                             name = "name_field"
-                                            value={fields.name_field}
                                             onChange= { e => {
                                                 fields[ind].name_field = e.target.value;
                                             } }
@@ -190,12 +180,13 @@ export const ProfilePage = () => {
                 </div> 
                 }
                 <a href="#" className="btn-floating btn-small waves-effect waves-light red"
-                onClick={addField}
+                onClick={ () => {
+                    fields.push({name_field: '', type_field: ''});
+                } }
                 ><i className="material-icons" title="Add field">add</i></a>  
                 <div className="card-action right">
                             <button
                                 className="btn yellow darken-4"
-                                style={{marginRight: 10}}
                                 disabled={loading}
                                 onClick={addCollection}
                                 >

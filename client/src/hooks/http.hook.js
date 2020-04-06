@@ -25,7 +25,7 @@ export const useHttp = () => {
     }, [] );
     const clearError = useCallback( () => setError(null), []);
 
-    const requestComment = useCallback( async (url, method = 'GET', body = null, headers = {}) => {
+    const requestNotLoading = useCallback( async (url, method = 'GET', body = null, headers = {}) => {
         setLoading(false);
         try {
             if (body) {
@@ -46,5 +46,5 @@ export const useHttp = () => {
         }
     }, [] );
 
-    return { loading, request, error, clearError, requestComment }
+    return { loading, request, error, clearError, requestNotLoading }
 }

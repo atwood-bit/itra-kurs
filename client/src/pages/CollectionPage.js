@@ -1,25 +1,31 @@
 import React, {useState, useEffect, useContext, useCallback} from 'react'
+import { useParams, useHistory } from 'react-router-dom'
+import MDReactComponent from 'markdown-react-js';
+import {storage} from '../config/configFirebase'
 import {useHttp} from '../hooks/http.hook'
 import {useMessage} from '../hooks/message.hook'
 import {AuthContext} from '../context/auth.context'
 import {Loader} from '../components/Loader'
 import {ItemTable} from '../components/ItemTable'
-import { useParams } from 'react-router-dom'
 
+let col_Fields = [];
+let id_fields = [];
+let item_fields = [];
+let div_id ="";
 export const CollectionPage = () => {
-    
+    const history = useHistory();
     const message =  useMessage();
     const [items, setItems] = useState( [] );
     const [fields, setFields] = useState( [] );
-    const [fieldsCol, setFieldsCol] = useState( [] );
     const [collection, setCollection] = useState( [] );
-    const {token, isAuthenticated} = useContext(AuthContext);
-    const {loading, request} = useHttp();
+    const {token, isAuthenticated, userId, userRole} = useContext(AuthContext);
+    const {loading, request, requestNotLoading} = useHttp();
     const [formItem, setFormItem] = useState({
         name: '', tags: ''
     });
     const colId = useParams().id;
-
+    
+    
     let d = new Date();
     let curr_date = d.getDate();
     let curr_month = d.getMonth() + 1;
@@ -32,10 +38,9 @@ export const CollectionPage = () => {
 
     const fetchItems = useCallback( async () => {
         try {
-            const fetched = await request(`/api/items/${colId}`, 'GET', null, {
-                Authorization: `Bearer ${token}`
-            });
+            const fetched = await request(`/api/items/${colId}`, 'GET', null);
             setItems(fetched);
+            item_fields = JSON.parse(JSON.stringify(fetched.custom_fields));
         } catch(e) {
         }
     }, [token, request]);
@@ -50,8 +55,7 @@ export const CollectionPage = () => {
                 Authorization: `Bearer ${token}`
             });
             setFields(fetched.custom_fields);
-            setFieldsCol(fetched.custom_fields);
-            delete fetched.custom_fields;
+            col_Fields = JSON.parse(JSON.stringify(fetched.custom_fields));
             setCollection(fetched);
         } catch(e) {
         }
@@ -75,38 +79,82 @@ export const CollectionPage = () => {
 
     const addItem = async () => {
         try {
-            const data = await request(`/api/items/add/${colId}`, 'POST', {...formItem, fields});
+            await request(`/api/items/add/${colId}`, 'POST', {...formItem, fields});
             fetchItems();
         } catch (e) {}
     };
     
     const addField = () => {
-        fieldsCol.push({name: '', type: ''});
+        col_Fields.push({name: '', type: ''});
     };
+
+    const deleteItem = async (itemId) => {
+        try {
+            await request(`/api/items/delete`, 'POST', {itemId, idCol: colId});
+            fetchItems();
+        } catch (e) {}
+    }
+
+    const deleteCollection = async () => {
+        try {
+            await request(`/api/col/delete`, 'POST', {delID: colId});
+            history.push('/');
+        } catch (e) {}
+    }
 
     const updateCollection = async () => {
         try {
-            const data = await request('/api/col/update/', 'POST', {collection, fieldsCol}, {
+            await request('/api/col/update/', 'POST', {collection, col_Fields, id_fields}, {
                 Authorization: `Bearer ${token}`
             });
             fetchItems();
             fetchFields();
-            message(data.message);
         } catch (e) {}
     };
 
-    let elem = document.querySelector('.collapsible.expandable');
-    let instance = window.M.Collapsible.init(elem, {
-        accordion: false});
+    const sortItem = useCallback( async (value) => {
+        try {
+            const fetched = await requestNotLoading(`/api/items/sort/${colId}/${value}`, 'GET', null);
+            setItems(fetched);
+        } catch(e) {
+        }
+    }, [token, requestNotLoading]);
 
+    const handleImageUpload = (e) => {
+        if (e.target.files[0]) {
+            const image = (e.target.files[0]);
+            const uploadTask = storage.ref(`images/${image.name}`).put(image);
+            uploadTask.on('state_changed', 
+            (snapshot) => {
+                console.log(snapshot);
+            },
+            (error) => {
+                console.log(error);
+            },
+            () => {
+                storage.ref('images').child(image.name).getDownloadURL().then(url => {
+                    collection.image = url;
+                })
+            }
+            )
+        }
+    }
+
+    let elem = document.querySelector('.collapsible.expandable');
+    window.M.Collapsible.init(elem, {
+        accordion: false});
 
     if(loading) {
         return <Loader />
     } 
 
-    if (isAuthenticated)
+    if (userId === collection.owner || userRole === 'admin')
     return(
-        <form>
+        <>
+                    <h3>{collection.name}</h3>
+                   {/* <p> {collection.image && <img src={`${collection.image}`} alt="" className="square left" style={{maxWidth: "20%", height: "auto", marginRight: "10px"}} />}</p> */}
+                    <p><b>Topic:</b> {collection.topic} <br/> </p>
+                        <MDReactComponent text={`${collection.text}`} />
         <ul className="collapsible expandable row">
     <li className="col s6">
       <div className="collapsible-header"><i className="material-icons">add</i>New item</div>
@@ -128,7 +176,7 @@ export const CollectionPage = () => {
                     case 'string':
                     case 'number':
                         return (
-                            <div key={f._id} className="col s6">
+                            <div key={f._id} className="col s6s">
                                 <div className="input-field">
                                     <label>{f.name}</label>
                                     <input type="text" className="validate" onChange={ (e) => {
@@ -152,10 +200,18 @@ export const CollectionPage = () => {
                         );
                     case 'checkbox':
                         return (
-                            <div key={f._id} className="col s6">
+                            <div key={f._id} className="col s6" style={{paddingBottom: 20}}>
                                 <div className="input-field">
                                     <label> 
-                                    <input type="checkbox" className="filled-in" />
+                                    <input type="checkbox" className="filled-in" 
+                                    onChange={() => {
+                                        const maine = document.getElementsByClassName('filled-in');
+                                        if (maine.item(0).checked === true)
+                                        fields[ind].value = true;
+                                        else 
+                                        fields[ind].value = false;
+                                    }}
+                                    />
                                     <span>{f.name}</span>
                                     </label>
                                 </div>
@@ -166,7 +222,9 @@ export const CollectionPage = () => {
                             <div key={f._id} className="col s6">
                                 <div className="input-field">
                                  <input type="date" name="trip-start" placeholder=""
-                                defaultValue={date}
+                                defaultValue= {date}
+                                onLoad={() => {
+                                    fields[ind].value = date;} }
                                 onChange={ (e) => {
                                 fields[ind].value = e.target.value;
                               } }>
@@ -183,7 +241,6 @@ export const CollectionPage = () => {
         <div className="card-action">
             <div className="col s12">
         <button className="btn yellow darken-4"
-            style={{marginRight: 10}}
             disabled={loading}
             onClick={addItem}> Add item </button>
         </div>
@@ -191,14 +248,15 @@ export const CollectionPage = () => {
       </div>
     </li>
     <li className="col s6">
-      <div className="collapsible-header"><i className="material-icons">edit</i>Change collection</div>
+      <div className="collapsible-header">
+            <i className="material-icons">edit</i>Change collection</div>
       <div className="collapsible-body row">
           <div className="col s6">
-                <label htmlFor="col_topic">Topic</label>
-                <select className="browser-default" name="topic" defaultValue = {collection.topic}
-                onChange={changeHandlerCol}
-                >
-                    <option value="" disabled selected>Choose your topic</option>
+                <label>Topic</label>
+                <select className="browser-default"
+                        name="topic"
+                        defaultValue = {collection.topic}
+                        onChange={changeHandlerCol}>
                     <option value="Books">Books</option>
                     <option value="Brands">Brands</option>
                     <option value="Alcohol">Alcohol</option>
@@ -229,16 +287,29 @@ export const CollectionPage = () => {
                 />
             </div>
 
-            { !loading && <> { fieldsCol.map((f, ind) => {
+            <div className="file-field input-field col s12">
+                    <div className="btn">
+                        <span>File</span>
+                        <input type="file" multiple
+                        onChange={handleImageUpload} 
+                        />
+                    </div>
+                    <div className="file-path-wrapper">
+                        <input className="file-path validate" type="text" defaultValue={collection.image} />
+                    </div>
+            </div>
+
+            { !loading && <> { 
+                col_Fields.map((col, id) => {
                 return (
-                    <div key={f._id}>
+                    <div key={col._id}>
                         <div className="col s5">
                             <label>Type of field</label>
                             <select className="browser-default"
                                     name="type"
-                                    defaultValue={f.type}
+                                    defaultValue={col.type}
                                     onChange= { e => {
-                                        fieldsCol[ind].type = e.target.value;
+                                        col_Fields[id].type = e.target.value;
                                             } }
                                             >
                                 <option value="" disabled selected>Choose type of field</option>
@@ -256,9 +327,10 @@ export const CollectionPage = () => {
                                 type="text"
                                 className="validate"
                                 name = "text"
-                                defaultValue={f.name}
+                                defaultValue={col.name}
                                 onChange={(e) => {
-                                    fieldsCol[ind].name = e.target.value;
+                                    col_Fields[id].name = e.target.value;
+                                    
                                 }}
                             /> 
                         </div>
@@ -266,10 +338,15 @@ export const CollectionPage = () => {
                             <a href="#1"
                                         className="right"
                                             onClick={ () => {
-                                                fieldsCol.splice(ind, 1);
+                                                item_fields.map((i) => {
+                                                    if (col.name === i.name && col.type === i.type)
+                                                    {
+                                                        id_fields.push(i._id);
+                                                    }
+                                                })
+                                                col_Fields.splice(id, 1);
                                             } }
-                                            ><i className="material-icons"
-                                            >clear</i></a>
+                                            ><i className="material-icons">clear</i></a>
                         </div>
                     </div>
                 );
@@ -278,22 +355,26 @@ export const CollectionPage = () => {
             <div className="col s12">
             <a href="#" className="btn-floating btn-small waves-effect waves-light red"
                 onClick={addField}><i className="material-icons" title="Add field">add</i></a>
+                <div className="right">
                 <a className="waves-effect waves-light btn"
                 onClick={updateCollection}
                 >Update</a>
-                <a className="waves-effect waves-light btn">Delete</a>
+                <a className="waves-effect waves-light btn"
+                onClick={deleteCollection}
+                >Delete</a>
+                </div>
         </div>
         </div>
     </li>
   </ul>
 
-        {!loading && <ItemTable items={items} fields={fields} />}
-       </form> 
+        {!loading && <ItemTable items={items} fields={fields} sort={sortItem} deleted={deleteItem} owner={collection.owner} />}
+       </> 
     )
     else 
     return (
         <div>
-        {!loading && <ItemTable items={items} fields={fields}/>}
+        {!loading && <ItemTable items={items} fields={fields} sort={sortItem}/>}
         </div>
     )
 }

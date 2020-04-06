@@ -1,58 +1,55 @@
-import React, { useContext, useCallback, useState } from 'react'
-import {NavLink, Link} from 'react-router-dom'
-import SearchField from 'react-search-field';
+import React, { useContext } from 'react'
+import {NavLink, useHistory} from 'react-router-dom'
 import {AuthContext} from '../context/auth.context'
 import {useAuth} from '../hooks/auth.hook'
-import { useHttp } from '../hooks/http.hook';
 
+let word = "";
 export const Navbar = () => {
     const {token, userRole, userId} = useAuth();
     const auth = useContext(AuthContext);
-    const {request} = useHttp();
-    const [form, setForm] = useState({
-      text: ''
-    });
+    const history = useHistory();
     let isAuthenticated;
     if (token) {
     isAuthenticated = !!token;
     }
-    
+
     const logoutHandler = event => {
         event.preventDefault();
         auth.logout();
         window.location.reload(true);
     }
 
-    const search = useCallback( async () => {
-      try {
-        //console.log(form);
-        const fetched = await request(`/api/search/`, 'GET', null);
-        console.log(fetched);
-    } catch(e) {}
-    }, [request])
+    const changeHandler = event => {
+      word = event.target.value;
+  };
 
     return (
         <nav>
     <div className="nav-wrapper purple darken-3" style ={{ padding: '0 2rem' }}>
       <NavLink to="/" className="brand-logo">Collections</NavLink>
+      <ul id="nav-mobile" className="hide-on-med-and-down">
+        <li>
        <div className="search-wrapper input-field">
             <input id="search" placeholder="Search" type="search" 
-            // value={form.text} name="text"
-            // onChange={(event) => setForm({ ...form, [event.target.name]: event.target.value })}
+            onChange={changeHandler}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                history.push(`/search_result/${word}`)
+                  window.location.reload(true);
+              }
+            }}
             />
-            <label className="label-icon" htmlFor="search"
-            onClick= { search }
-            >
-              {/* <Link to="/"> */}
-              <i className="material-icons">search</i>
-              {/* </Link> */}
+            <label className="label-icon" htmlFor="search">
+                <i className="material-icons"
+                onClick={() => {
+                  history.push(`/search_result/${word}`)
+                  window.location.reload(true);
+                }}
+                >search</i>
               </label>
           </div>
-        {/* <div className="input-field search">
-          <input id="search" type="search" required />
-          <label className="label-icon" htmlFor="search"><i className="material-icons">search</i></label>
-          <i className="material-icons">close</i>
-        </div> */}
+          </li>
+          </ul>
       { isAuthenticated && 
       <ul id="nav-mobile" className="right hide-on-med-and-down">
         <li><NavLink to={`/profile/${userId}`}>My collection</NavLink></li>
@@ -66,6 +63,16 @@ export const Navbar = () => {
         <li><NavLink to="/login">Sign In</NavLink></li>
       </ul>
       }
+      {/* <ul id="nav-mobile" className="right hide-on-med-and-down">
+      <select className="browser-default select-lang" 
+      // defaultValue={lang.language} onChange={(e) => {
+      //   lang.language = e.target.value;
+      // }}
+      >
+                    <option value="ru">rus</option>
+                    <option value="en">eng</option>
+                </select>
+</ul> */}
     </div>
   </nav>
   

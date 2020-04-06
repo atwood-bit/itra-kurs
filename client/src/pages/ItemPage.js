@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext, useCallback} from 'react'
+import React, {useState, useEffect, useContext, useCallback, useLayoutEffect} from 'react'
 import {useHttp} from '../hooks/http.hook'
 import {useMessage} from '../hooks/message.hook'
 import {AuthContext} from '../context/auth.context'
@@ -6,17 +6,21 @@ import {Loader} from '../components/Loader'
 import {ItemTable} from '../components/ItemTable'
 import {CommentsList} from '../components/CommentsList'
 import { useParams } from 'react-router-dom'
+import MDReactComponent from 'markdown-react-js';
 
+let count_likes;
 export const ItemPage = () => {
     const message =  useMessage();
     const [item, setItem] = useState( [] );
     const [fields, setFields] = useState( [] );
     const [comments, setComments] = useState( [] );
     const {token, isAuthenticated, userId, userRole} = useContext(AuthContext);
-    const {loading, request, requestComment} = useHttp();
+    const {loading, request, requestNotLoading} = useHttp();
     const [text, setText] = useState('');
     const itemId = useParams().id;
     const [owner, setOwner] = useState('');
+    let checks = false;
+    
     const fetchComments = useCallback( async () => {
         try {
             const fetched = await request(`/api/comments/${itemId}`, 'GET', null, {
@@ -29,13 +33,13 @@ export const ItemPage = () => {
 
     const updateComments = useCallback( async () => {
         try {
-            const updated = await requestComment(`/api/comments/${itemId}`, 'GET', null, {
+            const updated = await requestNotLoading(`/api/comments/${itemId}`, 'GET', null, {
                 Authorization: `Bearer ${token}`
             });
             setComments(updated);
         } catch(e) {
         }
-    }, [token, requestComment, itemId]);
+    }, [token, requestNotLoading, itemId]);
 
     const addComment = async () => {
         try {
@@ -48,27 +52,30 @@ export const ItemPage = () => {
     }
 
     const Liked = async () => {
-        // let k;
-        // try {
-        //     item[0].likes.map(async (l) => {
-        //         if (l.userId == userId) {
-        //             const user = await request('/api/items/unlike', 'POST', {idItem: itemId, idUser: userId}, {
-        //                 Authorization: `Bearer ${token}`
-        //             });
-        //             k++;
-        //             console.log("qq" + k);
-        //         }
-        //     })
-        //     if (!k) {
-        //     const user = await request('/api/items/like', 'POST', {idItem: itemId, idUser: userId}, {
-        //         Authorization: `Bearer ${token}`
-        //     }); 
-        //     message(user.message);
-        // }
-        //     fetchItem();
-        //     console.log(item[0].likes);
-        //     console.log(k)
-        // } catch (e) {}
+        let like = false;
+        const check = document.getElementsByName("checkLike")
+        for (let i = 0; i < item.likes.length; i++)
+            {
+                if (item.likes[i] === userId)
+                {
+                    like = true;
+                    break;
+                }
+            }
+        try {
+            if (like)
+            {
+            const user = await requestNotLoading('/api/items/unlike', 'POST', {idItem: itemId, idUser: userId}, {
+                Authorization: `Bearer ${token}` });
+                check.item[0].checked = false; 
+            }
+                else {
+            const user = await requestNotLoading('/api/items/like', 'POST', {idItem: itemId, idUser: userId}, {
+                Authorization: `Bearer ${token}` });
+                check.item[0].checked = false; 
+                }
+             fetchItem();
+        } catch (e) {}
     }
 
 
@@ -78,8 +85,14 @@ export const ItemPage = () => {
                 Authorization: `Bearer ${token}`
             });
             setItem(fetched);
+            count_likes = fetched.likes.length;
             setFields(fetched.custom_fields);
-            const fetch = await request(`/api/col/findone/${fetched[0].ownCol}`, 'GET', null, {
+            fetched.likes.map((l) => {
+                if (l === userId) {
+                    checks = true;
+                }
+            })
+            const fetch = await request(`/api/col/findone/${fetched.ownCol}`, 'GET', null, {
                 Authorization: `Bearer ${token}`
             });
             setOwner(fetch.owner);
@@ -99,7 +112,6 @@ export const ItemPage = () => {
     useEffect( () => {
         setInterval(updateComments, 5000);
     }, [updateComments]);
-    
 
     useEffect( () => {
         window.M.updateTextFields();
@@ -109,76 +121,49 @@ export const ItemPage = () => {
         return <Loader />
     } 
 
-    if (isAuthenticated)
-    return(
+    return (
         <>
-         { (userId === owner || userRole === 'admin') && <>
-            <div className="row" style={{border: "5px dotted", marginTop: "20px"}}>
-            <div className="col s6">
-          <label>Name</label>
-            <input id="item_name" type="text" className="validate" name="name" defaultValue={item.name} //onChange={changeHandlerItem} 
-            />
-        </div>
-        <div className="col s6">
-          <label>Tags</label>
-            <input id="item_tags" type="text" className="validate" name="tags" defaultValue={item.tags} //onChange={changeHandlerItem} 
-            />
-        </div>
-        <div className="col s6">
-            <label>Date of add</label>
-            <input disabled value={ item.dateAdd } id="disabled" type="text" class="validate" />
-        </div>
+        <div>
+                <div style={{marginTop: "10px"}}>
+                <span style={{fontSize:"24pt"}}>{item.name}</span>
+                {isAuthenticated && (userId === owner || userRole === 'admin') && <>
+                <a href={`/change_item/${item._id}`}><i className="material-icons">edit</i></a>
+                <a href={`/change_item/${item._id}`}><i className="material-icons">delete</i></a>
+                </> }
+                </div>
+
+                <p><b>Tags:</b> {item.tags} </p>
+                
         { fields.map((f, ind) => {
             return (
-            <div className="col s6">
-                <label>{f.name}</label>
-                <input type="text" className="validate" name={f.name} defaultValue={f.value} //onChange={changeHandlerItem} 
-                />
-            </div>
+            <p><b>{f.name}:</b> {f.type === 'text' && <MDReactComponent text={f.value} />}
+            {f.type !== 'text' && <span>{f.value}</span>}</p>
             )
         }) }
-            </div>
-         </> }
-
-         <div>
-         <input id="toggle-heart" type="checkbox"
+        </div>
+        {isAuthenticated && !loading && <><div className="left">
+            <input id="toggle-heart" type="checkbox" name="checkLike" />
+            <label htmlFor="toggle-heart" aria-label="like"
                 onClick = {Liked}
-                />
-                <label htmlFor="toggle-heart" aria-label="like"
                 >❤</label>
-         </div>
-            <div className="row">
-                <div className="input-field col s6">
+                <span>{count_likes}</span>
+        </div>
+        <br/>
+        <div className="row">
+            <div className="input-field col s6">
                 <textarea id="textarea1" className="materialize-textarea"
                 onChange={ e => { setText(e.target.value) } }
                 ></textarea>
                 <label htmlFor="textarea1">Input your comment</label>
                 </div>
-                <div>
+                <div style={{marginTop: "10px"}}>
                     <a className="waves-effect waves-light btn"
                 href='#'
                 onClick={addComment}
                 >Comment</a>
             </div>
-            </div>
-
-            {!loading && <CommentsList comments={comments}/>}
-            
+        </div></>}
         
-       </> 
-    )
-
-    return (
-        <>
-        <div>
-                <h3>{item.name}</h3>
-                <p><b>Tags:</b> {item.tags} </p>
-        </div>
-        { fields.map((f, ind) => {
-            return (
-            <p><b>{f.name}: {f.value}</b></p>
-            )
-        }) }
         {!loading && <CommentsList comments={comments}/>}
         </>
     )

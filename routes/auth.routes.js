@@ -75,11 +75,48 @@ router.post(
         const token = jwt.sign(
             { userId: user.id, userRole: user.role},
             config.get('jwtSecret'),
-            { expiresIn: '1h' }
+            {  }
         );
         res.json({ token, userId: user.id, userRole: user.role })
     } catch (e) {
-        res.status(500).json({ message: 'Что-то пошло не так!' });
+        res.status(500).json(e.message);
+    }
+});
+
+router.post(
+    '/soc_login',
+    async (req,res) => {
+    try {
+        const {name, email, pass} = req.body;
+        const user = await User.findOne({ 'email': email });
+        dateLog = Date.now();
+        if (!user) {
+            const hashedPassword = await bcrypt.hash(pass, 12);
+            const userCreate = new User({ email, password: hashedPassword, name });
+            const userC = await userCreate.save();
+            const token = jwt.sign(
+                { userId: userC.id, userRole: userC.role},
+                config.get('jwtSecret'),
+                {  }
+            );
+            res.status(201).json({ token, userId: user.id, userRole: user.role })
+        }
+        else {
+            if (user.blocked === 'blocked')
+        {
+            return res.status(400).json({ message: 'Вы заблокированы' })
+        }
+            await User.updateOne({ 'email':  email}, { $set: { 'dateLog': dateLog } });
+            const token = jwt.sign(
+                { userId: user.id, userRole: user.role},
+                config.get('jwtSecret'),
+                {  }
+            );
+            res.status(201).json({ token, userId: user.id, userRole: user.role })
+        }
+        
+    } catch (e) {
+        res.status(500).json(e.message);
     }
 });
 

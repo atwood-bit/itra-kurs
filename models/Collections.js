@@ -11,4 +11,5 @@ const schema = new Schema({
     countItems: {type: Number, default: 0}
 });
 
+schema.index({name: "text", text: "text", topic: "text"});
 module.exports = model('Collections', schema);
